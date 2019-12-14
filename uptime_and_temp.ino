@@ -48,6 +48,7 @@
 const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 int doSerial = true;
+unsigned long lastMs = 0L;
 
 void setup() {
   // set up the LCD's number of columns and rows:
@@ -55,15 +56,15 @@ void setup() {
 
   if (doSerial)
     Serial.begin(9600);
+
+  lastMs = millis() / 1000L;
 }
 
 byte buf[16];
 int bp = 0;
+unsigned int upTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99;
 
 void loop() {
-  unsigned int upTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99;
-  int foo = 0;
-  
   if (doSerial) {
     if (Serial.available()) {
       while (Serial.available() && bp < 16) {
@@ -92,23 +93,30 @@ void loop() {
       lcd.print(hiTemp);
       lcd.print(char(223));
       lcd.print("  ");
-    
-      // set the cursor to column 0, line 1
-      lcd.setCursor(0, 1);
-      // print the number of seconds since reset:
-      unsigned long d = upTime / (24L * 60L * 60L);
-      lcd.print(d);
-      lcd.print("d ");
-      unsigned long h = (upTime / (60L * 60L)) % 24L;
-      lcd.print(h);
-      lcd.print("h ");
-      unsigned long m = (upTime / 60L) % 60L;
-      lcd.print(m);
-      lcd.print("m ");
-      unsigned long s = upTime % 60L;
-      lcd.print(s);
-      lcd.print("s ");
-      lcd.print("   ");
+      lastMs = millis() / 1000L;
     }
   }
+
+  unsigned long curMs = millis() / 1000L;
+  if (curMs > lastMs) {
+    upTime += curMs - lastMs;
+    lastMs = curMs;
+  }
+  
+  // set the cursor to column 0, line 1
+  lcd.setCursor(0, 1);
+  // print the number of seconds since reset:
+  unsigned long d = upTime / (24L * 60L * 60L);
+  lcd.print(d);
+  lcd.print("d ");
+  unsigned long h = (upTime / (60L * 60L)) % 24L;
+  lcd.print(h);
+  lcd.print("h ");
+  unsigned long m = (upTime / 60L) % 60L;
+  lcd.print(m);
+  lcd.print("m ");
+  unsigned long s = upTime % 60L;
+  lcd.print(s);
+  lcd.print("s ");
+  lcd.print("   ");
 }

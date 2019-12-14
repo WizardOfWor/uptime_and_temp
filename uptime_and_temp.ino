@@ -53,6 +53,7 @@ unsigned long lastMs = 0L;
 void setup() {
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
+  lcd.noDisplay();
 
   if (doSerial)
     Serial.begin(9600);
@@ -73,6 +74,7 @@ void loop() {
     }
   
     if (bp == 16) {
+      lcd.display();
       upTime  = *(int*)&buf[0];
       loTemp  = *(int*)&buf[4];
       curTemp = *(int*)&buf[8];

@@ -5,6 +5,8 @@ import struct
 import time
 from uptime import *
 
+print(requests.__file__)
+
 xml = requests.get('https://forecast.weather.gov/MapClick.php?lat=28.6918&lon=-81.4187&unit=0&lg=english&FcstType=dwml')
 
 root = ET.fromstring(xml.text)

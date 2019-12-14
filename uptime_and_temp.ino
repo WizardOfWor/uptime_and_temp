@@ -47,31 +47,68 @@
 // with the arduino pin number it is connected to
 const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
+int doSerial = true;
 
 void setup() {
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
-  // Print a message to the LCD.
-  lcd.print("uptime");
+
+  if (doSerial)
+    Serial.begin(9600);
 }
 
+byte buf[16];
+int bp = 0;
+
 void loop() {
-  // set the cursor to column 0, line 1
-  // (note: line 1 is the second row, since counting begins with 0):
-  lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  unsigned long t = millis() / 1000;
-  unsigned long d = t / (24L * 60L * 60L);
-  lcd.print(d);
-  lcd.print("d ");
-  unsigned long h = (t / (60L * 60L)) % 24L;
-  lcd.print(h);
-  lcd.print("h ");
-  unsigned long m = (t / 60L) % 60L;
-  lcd.print(m);
-  lcd.print("m ");
-  unsigned long s = t % 60L;
-  lcd.print(s);
-  lcd.print("s ");
-  lcd.print("   ");
+  unsigned int upTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99;
+  int foo = 0;
+  
+  if (doSerial) {
+    if (Serial.available()) {
+      while (Serial.available() && bp < 16) {
+        buf[bp++] = Serial.read();
+      }
+    }
+  
+    if (bp == 16) {
+      upTime  = *(int*)&buf[0];
+      loTemp  = *(int*)&buf[4];
+      curTemp = *(int*)&buf[8];
+      hiTemp  = *(int*)&buf[12];
+      bp = 0;
+      
+      // set the cursor to column 0, line 0
+      lcd.setCursor(0, 0);
+      lcd.print(curTemp);
+      lcd.print(char(223));
+      lcd.print(" L ");
+    
+      lcd.print(loTemp);
+      lcd.print(char(223));
+      
+      lcd.print(" H ");
+    
+      lcd.print(hiTemp);
+      lcd.print(char(223));
+      lcd.print("  ");
+    
+      // set the cursor to column 0, line 1
+      lcd.setCursor(0, 1);
+      // print the number of seconds since reset:
+      unsigned long d = upTime / (24L * 60L * 60L);
+      lcd.print(d);
+      lcd.print("d ");
+      unsigned long h = (upTime / (60L * 60L)) % 24L;
+      lcd.print(h);
+      lcd.print("h ");
+      unsigned long m = (upTime / 60L) % 60L;
+      lcd.print(m);
+      lcd.print("m ");
+      unsigned long s = upTime % 60L;
+      lcd.print(s);
+      lcd.print("s ");
+      lcd.print("   ");
+    }
+  }
 }

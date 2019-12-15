@@ -63,7 +63,7 @@ void setup() {
 
 byte buf[16];
 int bp = 0;
-unsigned int upTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99;
+long upTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99;
 
 void loop() {
   if (doSerial) {
@@ -75,10 +75,10 @@ void loop() {
   
     if (bp == 16) {
       lcd.display();
-      upTime  = *(int*)&buf[0];
-      loTemp  = *(int*)&buf[4];
-      curTemp = *(int*)&buf[8];
-      hiTemp  = *(int*)&buf[12];
+      upTime  = *(long*)&buf[0];
+      loTemp  = *(long*)&buf[4];
+      curTemp = *(long*)&buf[8];
+      hiTemp  = *(long*)&buf[12];
       bp = 0;
       
       // set the cursor to column 0, line 0

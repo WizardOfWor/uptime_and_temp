@@ -1,15 +1,20 @@
 /*
-  LiquidCrystal Library - uptime_and_temp
+ uptime_and_temp
+ by Daniel Britton
+ 
+ This sketch reads uptime in seconds and temperature data from a
+ connected USB serial port and displays it on the LCD.  In between
+ periodic updates of the PC's uptime, it updates the time every second.
 
+ Based on the LiquidCrystal Library demo that ships with Arduino IDE,
+ original documentation and attributions below.
+ 
  Demonstrates the use a 16x2 LCD display.  The LiquidCrystal
  library works with all LCD displays that are compatible with the
  Hitachi HD44780 driver. There are many of them out there, and you
  can usually tell them by the 16-pin interface.
 
- This sketch prints "Hello World!" to the LCD
- and shows the time.
-
-  The circuit:
+ The circuit:
  * LCD RS pin to digital pin 12
  * LCD Enable pin to digital pin 11
  * LCD D4 pin to digital pin 5

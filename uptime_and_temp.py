@@ -4,6 +4,7 @@ import serial
 import struct
 import time
 from uptime import *
+from datetime import datetime
 
 xml = requests.get('https://forecast.weather.gov/MapClick.php?lat=28.6918&lon=-81.4187&unit=0&lg=english&FcstType=dwml')
 
@@ -47,5 +48,7 @@ time.sleep(1)
 
 ser.close()
 
-print(creationDate, int(up), loTemp, currentTemp, hiTemp, sep=",")
+currentTime = datetime.now()
+
+print(currentTime, creationDate, int(up), loTemp, currentTemp, hiTemp, sep=",")
 

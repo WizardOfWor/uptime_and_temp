@@ -1,3 +1,9 @@
+uptime_and_temp
+
+Arduino program to show the current/hi/lo temps and your Windows PC's uptime
+
+![Image of uptime_and_temp](https://hermitian.net/windows/uptime_and_temp-crop.jpg)
+
 Installing uptime_and_temp on Windows 10
 ==============
 Create a task in Task Scheduler using the included uptime_and_temp.cmd file.  Ensure you have the path to your

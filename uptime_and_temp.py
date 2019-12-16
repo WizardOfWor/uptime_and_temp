@@ -6,7 +6,10 @@ import time
 from uptime import *
 from datetime import datetime
 
-xml = requests.get('https://forecast.weather.gov/MapClick.php?lat=28.6918&lon=-81.4187&unit=0&lg=english&FcstType=dwml')
+lat = 28.7
+lon = -81.4
+url = 'https://forecast.weather.gov/MapClick.php?lat=' + str(lat) + '&lon=' + str(lon) + '&unit=0&lg=english&FcstType=dwml'
+xml = requests.get(url)
 
 root = ET.fromstring(xml.text)
 

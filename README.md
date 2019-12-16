@@ -1,8 +1,14 @@
 uptime_and_temp
+==============
 
-Arduino program to show the current/hi/lo temps and your Windows PC's uptime
+Arduino sketch and Windows python code to show the current/hi/lo temps and your PC's uptime
 
 ![Image of uptime_and_temp](https://hermitian.net/windows/uptime_and_temp-crop.jpg)
+
+Building
+==============
+Use pip to install uptime and ElementTree in your python 3.7 config
+Uses the LiquidCrystal library for Arduino
 
 Installing uptime_and_temp on Windows 10
 ==============

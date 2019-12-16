@@ -18,25 +18,27 @@ tempElem = root.findall(path)
 currentTemp = 0
 for i in tempElem:
     currentTemp = i.text
+    break   # should only be one current temp, but just in case only take the first one returned
 
 path = './/data[@type="forecast"]/parameters[@applicable-location="point1"]/temperature[@type="maximum"]/value'
 tempElem = root.findall(path)
 hiTemp = 0
 for i in tempElem:
     hiTemp = i.text
+    break   # data includes forecasts for 7 days, only take the first one
  
 path = './/data[@type="forecast"]/parameters[@applicable-location="point1"]/temperature[@type="minimum"]/value'
 tempElem = root.findall(path)
 loTemp = 0
 for i in tempElem:
     loTemp = i.text
+    break   # see maximum above
 
 up = int(uptime())
 
 ser = serial.Serial('COM3', 9600)
 time.sleep(2)
 
-#ser.write(struct.pack('>iiii', int(up), int(loTemp), int(currentTemp), int(hiTemp)))
 ser.write(struct.pack('<l', up))
 time.sleep(1)
 ser.write(struct.pack('<l', int(loTemp)))

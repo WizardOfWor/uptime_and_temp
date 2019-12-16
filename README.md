@@ -12,10 +12,11 @@ Uses the LiquidCrystal library for Arduino
 
 Installing uptime_and_temp on Windows 10
 ==============
-Create a task in Task Scheduler using the included uptime_and_temp.cmd file.  Ensure you have the path to your
-local packages in your PYTHONPATH system environment variable
+Set your lat/lon at the top of uptime_and_temp.py.
 
-C:\Users\danie\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.7_qbz5n2kfra8p0\LocalCache\local-packages\Python37\site-packages>
+Create a task in Task Scheduler using the included uptime_and_temp.cmd file.  Ensure you have the path to your local packages in your PYTHONPATH system environment variable.
+
+set PYTHONPATH=%PYTHONPATH%;C:\Users\danie\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.7_qbz5n2kfra8p0\LocalCache\local-packages\Python37\site-packages>
 
 
 

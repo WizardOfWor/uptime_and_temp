@@ -6,8 +6,8 @@ import time
 from uptime import *
 from datetime import datetime
 
-lat = 28.7
-lon = -81.4
+lat = 28.6918
+lon = -81.4187
 url = 'https://forecast.weather.gov/MapClick.php?lat=' + str(lat) + '&lon=' + str(lon) + '&unit=0&lg=english&FcstType=dwml'
 xml = requests.get(url)
 

@@ -44,10 +44,10 @@
  http://www.arduino.cc/en/Tutorial/LiquidCrystalHelloWorld
 
 */
-#include <Timezone.h>           // http://github.com/JChristensen/Timezone
-#include <time.h>
 
-// include the library code:
+#include <math.h>
+
+#include <Timezone.h>           // http://github.com/JChristensen/Timezone
 #include <LiquidCrystal.h>
 
 #ifndef   UNIX_OFFSET
@@ -85,6 +85,7 @@ void setup() {
 
 #define XFER_BUFSIZ 20
 byte buf[XFER_BUFSIZ];
+char dispBuf[32];
 int bp = 0;
 long upTime = 0, dispTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99;
 long displayTime = 0;
@@ -109,18 +110,28 @@ void loop() {
       
       // set the cursor to column 0, line 0
       lcd.setCursor(0, 0);
-      lcd.print(curTemp);
-      lcd.print(char(223));
-      lcd.print(" L ");
-    
-      lcd.print(loTemp);
-      lcd.print(char(223));
-      
-      lcd.print(" H ");
-    
-      lcd.print(hiTemp);
-      lcd.print(char(223));
-      lcd.print("  ");
+
+      // Examples to Fit Text in Display
+      // 1234567890123456        1234567890123456
+      // 99d L 99d H 99d                              Most of the world
+      // 100d L 100d H 100d  --> 110d L100d H100d     Someplace hot
+      // -10d L -10d H -10d  --> -10d L-10d H-10d     Someplace not
+      int pad = 0, padlimit = 0;
+      sprintf(dispBuf, "%ld%c L %ld%c H %ld%c", curTemp, char(223), loTemp, char(223), hiTemp, char(223));
+      if (strlen(dispBuf) >= 16) {
+        // If the temp display won't fit in the 16-digit display, compact it by removing spaces.
+        sprintf(dispBuf, "%ld%c L%ld%c H%ld%c", curTemp, char(223), loTemp, char(223), hiTemp, char(223));        
+      } else {
+        // Center the text as long as the display string is less than 16 characters.
+        pad = (16 - strlen(dispBuf)) / 2;
+        // If exactly 15 characters, indent by one.
+        padlimit = max(pad, 1);
+      }
+      for (int i = 0; i < padlimit; i++)
+        lcd.print(" ");
+      lcd.print(dispBuf);
+      for (int i = 0; i < pad; i++)
+        lcd.print(" ");      
       lastMs = millis() / 1000L;
     }
   }
@@ -147,29 +158,27 @@ void loop() {
 
   if (toShow == SHOW_TIME) {
     TimeChangeRule *tcr;        // pointer to the time change rule, use to get the TZ abbrev
-    char m[4];    // temporary storage for month string (DateStrings.cpp uses shared buffer)
-    char buf[40];
-
     epochSecs = time_t(dispTime - UNIX_OFFSET);
     time_t t = usEastern.toLocal(epochSecs, &tcr);    
-    strcpy(m, monthShortStr(month(t)));
-    sprintf(buf, "%2.2d:%.2d:%.2d %2.2d/%2.2d", hour(t), minute(t), second(t), month(t), day(t));
-            
-    lcd.print(buf);
+    sprintf(dispBuf, "%d:%.2d:%.2d%c %2.2d/%2.2d", hourFormat12(t), minute(t), second(t), isAM(t) ? 'A' : 'P', month(t), day(t));
+    int pad = (16 - strlen(dispBuf)) / 2;
+    for (int i = 0; i < pad; i++)
+      lcd.print(" ");
+    lcd.print(dispBuf);
+    for (int i = 0; i < pad; i++)
+      lcd.print(" ");
   } else if (toShow == SHOW_UPTIME) {
     // print the number of seconds since reset:
     unsigned long d = upTime / (24L * 60L * 60L);
-    lcd.print(d);
-    lcd.print("d ");
     unsigned long h = (upTime / (60L * 60L)) % 24L;
-    lcd.print(h);
-    lcd.print("h ");
     unsigned long m = (upTime / 60L) % 60L;
-    lcd.print(m);
-    lcd.print("m ");
     unsigned long s = upTime % 60L;
-    lcd.print(s);
-    lcd.print("s ");
-    lcd.print("   ");
+    sprintf(dispBuf, "%ldd %ldh %ldm %lds", d, h, m, s);
+    int pad = (16 - strlen(dispBuf)) / 2;
+    for (int i = 0; i < pad; i++)
+      lcd.print(" ");
+    lcd.print(dispBuf);
+    for (int i = 0; i < pad; i++)
+      lcd.print(" ");
   }
 }

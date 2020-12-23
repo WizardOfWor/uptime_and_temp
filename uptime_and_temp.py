@@ -1,10 +1,11 @@
 import xml.etree.ElementTree as ET
+import os
 import requests
 import serial
 import struct
 import time
 from uptime import *
-from datetime import datetime
+from datetime import datetime, timezone
 
 lat = 28.6918
 lon = -81.4187
@@ -39,10 +40,15 @@ for i in tempElem:
 
 up = int(uptime())
 
+dt = datetime.now()
+epochSecs = int(dt.timestamp())
+
 ser = serial.Serial('COM3', 9600)
 time.sleep(2)
 
 ser.write(struct.pack('<l', up))
+time.sleep(1)
+ser.write(struct.pack('<l', epochSecs))
 time.sleep(1)
 ser.write(struct.pack('<l', int(loTemp)))
 time.sleep(1)
@@ -55,5 +61,5 @@ ser.close()
 
 currentTime = datetime.now()
 
-print(currentTime, creationDate, int(up), loTemp, currentTemp, hiTemp, sep=",")
+print(currentTime, creationDate, int(up), loTemp, currentTemp, hiTemp, int(epochSecs), sep=",")
 

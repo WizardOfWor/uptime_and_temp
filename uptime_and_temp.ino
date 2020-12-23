@@ -44,9 +44,15 @@
  http://www.arduino.cc/en/Tutorial/LiquidCrystalHelloWorld
 
 */
+#include <Timezone.h>           // http://github.com/JChristensen/Timezone
+#include <time.h>
 
 // include the library code:
 #include <LiquidCrystal.h>
+
+#ifndef   UNIX_OFFSET
+#define   UNIX_OFFSET   946684800
+#endif
 
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
@@ -54,6 +60,17 @@ const int rs = 8, en = 9, d4 = 4, d5 = 5, d6 = 6, d7 = 7;
 LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 int doSerial = true;
 unsigned long lastMs = 0L;
+
+#define SHOW_TIME 0
+#define SHOW_UPTIME 1
+#define TIME_DISPLAY_INTERVAL 5
+int toShow = SHOW_UPTIME;
+
+time_t eastern, utc;
+TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  //UTC - 4 hours
+TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, -300};   //UTC - 5 hours
+Timezone usEastern(usEDT, usEST);
+
 
 void setup() {
   // set up the LCD's number of columns and rows:
@@ -66,24 +83,28 @@ void setup() {
   lastMs = millis() / 1000L;
 }
 
-byte buf[16];
+#define XFER_BUFSIZ 20
+byte buf[XFER_BUFSIZ];
 int bp = 0;
-long upTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99;
+long upTime = 0, dispTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99;
+long displayTime = 0;
+time_t epochSecs;
 
 void loop() {
   if (doSerial) {
     if (Serial.available()) {
-      while (Serial.available() && bp < 16) {
+      while (Serial.available() && bp < XFER_BUFSIZ) {
         buf[bp++] = Serial.read();
       }
     }
   
-    if (bp == 16) {
+    if (bp == XFER_BUFSIZ) {
       lcd.display();
-      upTime  = *(long*)&buf[0];
-      loTemp  = *(long*)&buf[4];
-      curTemp = *(long*)&buf[8];
-      hiTemp  = *(long*)&buf[12];
+      upTime    = *(long*)&buf[0];
+      dispTime  = *(long*)&buf[4];
+      loTemp    = *(long*)&buf[8];
+      curTemp   = *(long*)&buf[12];
+      hiTemp    = *(long*)&buf[16];
       bp = 0;
       
       // set the cursor to column 0, line 0
@@ -106,24 +127,49 @@ void loop() {
 
   unsigned long curMs = millis() / 1000L;
   if (curMs > lastMs) {
-    upTime += curMs - lastMs;
+    long delta = curMs - lastMs;
+    upTime += delta;
     lastMs = curMs;
+
+    displayTime += delta;
+    dispTime += delta;
+    if (displayTime > TIME_DISPLAY_INTERVAL) {
+      toShow = toShow == SHOW_TIME ? SHOW_UPTIME : SHOW_TIME;
+      displayTime = 0;
+      // set the cursor to column 0, line 1
+      lcd.setCursor(0, 1);
+      lcd.print("                ");
+    }
   }
   
   // set the cursor to column 0, line 1
   lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  unsigned long d = upTime / (24L * 60L * 60L);
-  lcd.print(d);
-  lcd.print("d ");
-  unsigned long h = (upTime / (60L * 60L)) % 24L;
-  lcd.print(h);
-  lcd.print("h ");
-  unsigned long m = (upTime / 60L) % 60L;
-  lcd.print(m);
-  lcd.print("m ");
-  unsigned long s = upTime % 60L;
-  lcd.print(s);
-  lcd.print("s ");
-  lcd.print("   ");
+
+  if (toShow == SHOW_TIME) {
+    TimeChangeRule *tcr;        // pointer to the time change rule, use to get the TZ abbrev
+    char m[4];    // temporary storage for month string (DateStrings.cpp uses shared buffer)
+    char buf[40];
+
+    epochSecs = time_t(dispTime - UNIX_OFFSET);
+    time_t t = usEastern.toLocal(epochSecs, &tcr);    
+    strcpy(m, monthShortStr(month(t)));
+    sprintf(buf, "%2.2d:%.2d:%.2d %2.2d/%2.2d", hour(t), minute(t), second(t), month(t), day(t));
+            
+    lcd.print(buf);
+  } else if (toShow == SHOW_UPTIME) {
+    // print the number of seconds since reset:
+    unsigned long d = upTime / (24L * 60L * 60L);
+    lcd.print(d);
+    lcd.print("d ");
+    unsigned long h = (upTime / (60L * 60L)) % 24L;
+    lcd.print(h);
+    lcd.print("h ");
+    unsigned long m = (upTime / 60L) % 60L;
+    lcd.print(m);
+    lcd.print("m ");
+    unsigned long s = upTime % 60L;
+    lcd.print(s);
+    lcd.print("s ");
+    lcd.print("   ");
+  }
 }

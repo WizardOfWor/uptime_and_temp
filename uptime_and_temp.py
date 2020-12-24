@@ -24,6 +24,31 @@ for i in tempElem:
     currentTemp = i.text
     break   # should only be one current temp, but just in case only take the first one returned
 
+path = './/data[@type="current observations"]/parameters[@applicable-location="point1"]/humidity[@type="relative"]/value'
+humidElem = root.findall(path)
+currentHumid = 0
+for i in humidElem:
+    currentHumid =int(i.text)
+    break   # should only be one current humidity, but just in case only take the first one returned
+
+path = './/data[@type="current observations"]/parameters[@applicable-location="point1"]/direction[@type="wind"]/value'
+windDirElem = root.findall(path)
+currentWindDir = 0
+for i in windDirElem:
+    currentWindDir = int(i.text)
+    break   # should only be one current wind direction, but just in case only take the first one returned
+
+path = './/data[@type="current observations"]/parameters[@applicable-location="point1"]/wind-speed[@type="sustained"]/value'
+windSpeedElem = root.findall(path)
+currentWindSpeed = 0
+for i in windSpeedElem:
+    currentWindSpeed = int(i.text)
+    break   # should only be one current wind direction, but just in case only take the first one returned
+
+otherWeatherInfo = currentHumid
+otherWeatherInfo |= currentWindSpeed << 8
+otherWeatherInfo |= currentWindDir << 16
+
 path = './/data[@type="forecast"]/parameters[@applicable-location="point1"]/temperature[@type="maximum"]/value'
 tempElem = root.findall(path)
 hiTemp = 0
@@ -47,19 +72,16 @@ ser = serial.Serial('COM3', 9600)
 time.sleep(2)
 
 ser.write(struct.pack('<l', up))
-time.sleep(1)
 ser.write(struct.pack('<l', epochSecs))
-time.sleep(1)
 ser.write(struct.pack('<l', int(loTemp)))
-time.sleep(1)
 ser.write(struct.pack('<l', int(currentTemp)))
-time.sleep(1)
 ser.write(struct.pack('<l', int(hiTemp)))
+ser.write(struct.pack('<l', int(otherWeatherInfo)))
 time.sleep(1)
 
 ser.close()
 
 currentTime = datetime.now()
 
-print(currentTime, creationDate, int(up), loTemp, currentTemp, hiTemp, int(epochSecs), sep=",")
+print(currentTime, creationDate, int(up), loTemp, currentTemp, hiTemp, int(epochSecs), currentHumid, currentWindSpeed, currentWindDir, otherWeatherInfo, sep=",")
 

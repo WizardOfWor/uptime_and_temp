@@ -71,6 +71,16 @@ TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  //UTC - 4 hours
 TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, -300};   //UTC - 5 hours
 Timezone usEastern(usEDT, usEST);
 
+const char *compassDirections[] = {"N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", 
+                                   "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW", "N"};
+
+const char *windDirectionDegreesToCompass(long degrees) {
+  degrees %= 360;
+  degrees *= 10;
+  degrees /= 225;
+  degrees = min(max(0, degrees), 16);
+  return compassDirections[degrees];
+}
 
 void setup() {
   // set up the LCD's number of columns and rows:
@@ -83,11 +93,11 @@ void setup() {
   lastMs = millis() / 1000L;
 }
 
-#define XFER_BUFSIZ 20
+#define XFER_BUFSIZ 24
 byte buf[XFER_BUFSIZ];
 char dispBuf[32];
 int bp = 0;
-long upTime = 0, dispTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99;
+long upTime = 0, dispTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99, other = 0, windSpeed = 0, windDir = 0, humidity = 0;
 long displayTime = 0;
 time_t epochSecs;
 
@@ -106,32 +116,13 @@ void loop() {
       loTemp    = *(long*)&buf[8];
       curTemp   = *(long*)&buf[12];
       hiTemp    = *(long*)&buf[16];
+      other     = *(long*)&buf[20];
       bp = 0;
-      
-      // set the cursor to column 0, line 0
-      lcd.setCursor(0, 0);
 
-      // Examples to Fit Text in Display
-      // 1234567890123456        1234567890123456
-      // 99d L 99d H 99d                              Most of the world
-      // 100d L 100d H 100d  --> 110d L100d H100d     Someplace hot
-      // -10d L -10d H -10d  --> -10d L-10d H-10d     Someplace not
-      int pad = 0, padlimit = 0;
-      sprintf(dispBuf, "%ld%c L %ld%c H %ld%c", curTemp, char(223), loTemp, char(223), hiTemp, char(223));
-      if (strlen(dispBuf) >= 16) {
-        // If the temp display won't fit in the 16-digit display, compact it by removing spaces.
-        sprintf(dispBuf, "%ld%c L%ld%c H%ld%c", curTemp, char(223), loTemp, char(223), hiTemp, char(223));        
-      } else {
-        // Center the text as long as the display string is less than 16 characters.
-        pad = (16 - strlen(dispBuf)) / 2;
-        // If exactly 15 characters, indent by one.
-        padlimit = max(pad, 1);
-      }
-      for (int i = 0; i < padlimit; i++)
-        lcd.print(" ");
-      lcd.print(dispBuf);
-      for (int i = 0; i < pad; i++)
-        lcd.print(" ");      
+      humidity = other & 0xff;        // Humidity is 0-100%
+      windSpeed = other >> 8 & 0xff;  // Wind better not be over 255 mph :-)
+      windDir = other >> 16 & 0xffff; // Wind direction is degrees 0-360, which is why it gets 16 bits
+            
       lastMs = millis() / 1000L;
     }
   }
@@ -148,14 +139,57 @@ void loop() {
       toShow = toShow == SHOW_TIME ? SHOW_UPTIME : SHOW_TIME;
       displayTime = 0;
       // set the cursor to column 0, line 1
+      lcd.setCursor(0, 0);
+      lcd.print("                ");
       lcd.setCursor(0, 1);
       lcd.print("                ");
     }
   }
+
+
+  int pad = 0, padlimit = 0;
+  // set the cursor to column 0, line 0
+  lcd.setCursor(0, 0);
+  if (toShow == SHOW_TIME) {
+    // Examples to Fit Text in Display
+    // 1234567890123456        1234567890123456
+    // 99d L 99d H 99d                              Most of the world
+    // 100d L 100d H 100d  --> 110d L100d H100d     Someplace hot
+    // -10d L -10d H -10d  --> -10d L-10d H-10d     Someplace not
+    sprintf(dispBuf, "%ld%c L %ld%c H %ld%c", curTemp, char(223), loTemp, char(223), hiTemp, char(223));
+    if (strlen(dispBuf) >= 16) {
+      // If the temp display won't fit in the 16-digit display, compact it by removing spaces.
+      sprintf(dispBuf, "%ld%c L%ld%c H%ld%c", curTemp, char(223), loTemp, char(223), hiTemp, char(223));        
+    } else {
+      // Center the text as long as the display string is less than 16 characters.
+      pad = (16 - strlen(dispBuf)) / 2;
+      // If exactly 15 characters, indent by one.
+      padlimit = max(pad, 1);
+    }
+    for (int i = 0; i < padlimit; i++)
+      lcd.print(" ");
+    lcd.print(dispBuf);
+    for (int i = 0; i < pad; i++)
+      lcd.print(" ");      
+  } else if (toShow == SHOW_UPTIME) {
+    // Examples to Fit Text in Display
+    // 1234567890123456
+    // 100% 200mph WSW
+    // 9% 0mph N
+    sprintf(dispBuf, "%ld%% %ldmph %s", humidity, windSpeed, windDirectionDegreesToCompass(windDir));
+    // Center the text as long as the display string is less than 16 characters.
+    pad = (16 - strlen(dispBuf)) / 2;
+    // If exactly 15 characters, indent by one.
+    padlimit = max(pad, 1);
+    for (int i = 0; i < padlimit; i++)
+      lcd.print(" ");
+    lcd.print(dispBuf);
+    for (int i = 0; i < pad; i++)
+      lcd.print(" ");      
+  }
   
   // set the cursor to column 0, line 1
   lcd.setCursor(0, 1);
-
   if (toShow == SHOW_TIME) {
     TimeChangeRule *tcr;        // pointer to the time change rule, use to get the TZ abbrev
     epochSecs = time_t(dispTime);

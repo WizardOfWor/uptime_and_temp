@@ -158,9 +158,10 @@ void loop() {
 
   if (toShow == SHOW_TIME) {
     TimeChangeRule *tcr;        // pointer to the time change rule, use to get the TZ abbrev
-    epochSecs = time_t(dispTime - UNIX_OFFSET);
-    time_t t = usEastern.toLocal(epochSecs, &tcr);    
-    sprintf(dispBuf, "%d:%.2d:%.2d%c %2.2d/%2.2d", hourFormat12(t), minute(t), second(t), isAM(t) ? 'A' : 'P', month(t), day(t));
+    epochSecs = time_t(dispTime/);
+    time_t t = usEastern.toLocal(epochSecs, &tcr);
+    setTime(t);    
+    sprintf(dispBuf, "%d:%.2d:%.2d%c %2.2d/%2.2d", hourFormat12(), minute(), second(), isAM() ? 'A' : 'P', month(), day());
     int pad = (16 - strlen(dispBuf)) / 2;
     for (int i = 0; i < pad; i++)
       lcd.print(" ");

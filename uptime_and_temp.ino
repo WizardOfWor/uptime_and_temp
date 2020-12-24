@@ -158,18 +158,24 @@ void loop() {
 
   if (toShow == SHOW_TIME) {
     TimeChangeRule *tcr;        // pointer to the time change rule, use to get the TZ abbrev
-    epochSecs = time_t(dispTime/);
+    epochSecs = time_t(dispTime);
     time_t t = usEastern.toLocal(epochSecs, &tcr);
     setTime(t);    
     sprintf(dispBuf, "%d:%.2d:%.2d%c %2.2d/%2.2d", hourFormat12(), minute(), second(), isAM() ? 'A' : 'P', month(), day());
+
+    // 1234567890123456
+    // 1:00:00P 1/25
+    // 12:00:00P 12/25
     int pad = (16 - strlen(dispBuf)) / 2;
-    for (int i = 0; i < pad; i++)
+    for (int i = 0; i < max(pad, 1); i++)
       lcd.print(" ");
     lcd.print(dispBuf);
     for (int i = 0; i < pad; i++)
       lcd.print(" ");
   } else if (toShow == SHOW_UPTIME) {
-    // print the number of seconds since reset:
+    // 1234567890123456
+    // 1d 0h 0m 0s
+    // 999d 23h 59m 59s
     unsigned long d = upTime / (24L * 60L * 60L);
     unsigned long h = (upTime / (60L * 60L)) % 24L;
     unsigned long m = (upTime / 60L) % 60L;

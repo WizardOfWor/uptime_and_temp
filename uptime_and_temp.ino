@@ -63,8 +63,11 @@ unsigned long lastMs = 0L;
 
 #define SHOW_TIME 0
 #define SHOW_UPTIME 1
-#define TIME_DISPLAY_INTERVAL 5
+#define TIME_DISPLAY_INTERVAL 6
 int toShow = SHOW_UPTIME;
+#define WIND_SPEED 0
+#define WIND_GUSTS 1
+int windToShow = WIND_SPEED;
 
 time_t eastern, utc;
 TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, -240};  //UTC - 4 hours
@@ -93,11 +96,15 @@ void setup() {
   lastMs = millis() / 1000L;
 }
 
-#define XFER_BUFSIZ 24
+int knotsToMph(int knots) {
+  return knots * 1150 / 1000;
+}
+
+#define XFER_BUFSIZ 28
 byte buf[XFER_BUFSIZ];
 char dispBuf[32];
 int bp = 0;
-long upTime = 0, dispTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99, other = 0, windSpeed = 0, windDir = 0, humidity = 0;
+long upTime = 0, dispTime = 0, loTemp = 32, curTemp = 50, hiTemp = 99, other = 0, wind = 0, windSpeed = 0, windDir = 0, humidity = 0, windGusts = 0;
 long displayTime = 0;
 time_t epochSecs;
 
@@ -117,12 +124,16 @@ void loop() {
       curTemp   = *(long*)&buf[12];
       hiTemp    = *(long*)&buf[16];
       other     = *(long*)&buf[20];
+      wind      = *(long*)&buf[24];
       bp = 0;
 
       humidity = other & 0xff;        // Humidity is 0-100%
       windSpeed = other >> 8 & 0xff;  // Wind better not be over 255 mph :-)
-      windDir = other >> 16 & 0xffff; // Wind direction is degrees 0-360, which is why it gets 16 bits
-            
+      windDir = other >> 16 & 0xff;   // Wind direction is degrees 0-360, which is why it gets 16 bits
+      windGusts = wind;
+
+      windSpeed = knotsToMph(windSpeed);
+      windGusts = knotsToMph(windGusts);
       lastMs = millis() / 1000L;
     }
   }
@@ -137,12 +148,16 @@ void loop() {
     dispTime += delta;
     if (displayTime > TIME_DISPLAY_INTERVAL) {
       toShow = toShow == SHOW_TIME ? SHOW_UPTIME : SHOW_TIME;
+      windToShow = WIND_SPEED;
       displayTime = 0;
       // set the cursor to column 0, line 1
       lcd.setCursor(0, 0);
       lcd.print("                ");
       lcd.setCursor(0, 1);
       lcd.print("                ");
+    }
+    if (displayTime > (TIME_DISPLAY_INTERVAL / 2)) {
+      windToShow = WIND_GUSTS;
     }
   }
 
@@ -174,9 +189,10 @@ void loop() {
   } else if (toShow == SHOW_UPTIME) {
     // Examples to Fit Text in Display
     // 1234567890123456
-    // 100% 200mph WSW
+    // 100% 200 mph WSW
     // 9% 0mph N
-    sprintf(dispBuf, "%ld%% %ldmph %s", humidity, windSpeed, windDirectionDegreesToCompass(windDir));
+    sprintf(dispBuf, "%ld%% %ld %s %s", humidity, windToShow == WIND_SPEED ? windSpeed : (windGusts > windSpeed ? windGusts : windSpeed), 
+      windToShow == WIND_SPEED ? "mph" : "MPH", windDirectionDegreesToCompass(windDir));
     // Center the text as long as the display string is less than 16 characters.
     pad = (16 - strlen(dispBuf)) / 2;
     // If exactly 15 characters, indent by one.

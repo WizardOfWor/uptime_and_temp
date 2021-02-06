@@ -45,9 +45,18 @@ for i in windSpeedElem:
     currentWindSpeed = int(i.text)
     break   # should only be one current wind direction, but just in case only take the first one returned
 
+path = './/data[@type="current observations"]/parameters[@applicable-location="point1"]/wind-speed[@type="gust"]/value'
+windGustElem = root.findall(path)
+currentWindGust = 0
+for i in windGustElem:
+    if i.text != "NA":
+        currentWindGust = int(i.text)
+    break   # should only be one current wind direction, but just in case only take the first one returned
+
 otherWeatherInfo = currentHumid
 otherWeatherInfo |= currentWindSpeed << 8
 otherWeatherInfo |= currentWindDir << 16
+windWeatherInfo = currentWindGust
 
 path = './/data[@type="forecast"]/parameters[@applicable-location="point1"]/temperature[@type="maximum"]/value'
 tempElem = root.findall(path)
@@ -77,6 +86,7 @@ ser.write(struct.pack('<l', int(loTemp)))
 ser.write(struct.pack('<l', int(currentTemp)))
 ser.write(struct.pack('<l', int(hiTemp)))
 ser.write(struct.pack('<l', int(otherWeatherInfo)))
+ser.write(struct.pack('<l', int(windWeatherInfo)))
 time.sleep(1)
 
 ser.close()

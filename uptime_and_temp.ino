@@ -211,7 +211,7 @@ void loop() {
     epochSecs = time_t(dispTime);
     time_t t = usEastern.toLocal(epochSecs, &tcr);
     setTime(t);    
-    sprintf(dispBuf, "%d:%.2d:%.2d%c %2.2d/%2.2d", hourFormat12(), minute(), second(), isAM() ? 'A' : 'P', month(), day());
+    sprintf(dispBuf, "%d:%.2d:%.2d%c %d/%d", hourFormat12(), minute(), second(), isAM() ? 'A' : 'P', month(), day());
 
     // 1234567890123456
     // 1:00:00P 1/25

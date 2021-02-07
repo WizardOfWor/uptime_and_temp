@@ -129,7 +129,7 @@ void loop() {
 
       humidity = other & 0xff;        // Humidity is 0-100%
       windSpeed = other >> 8 & 0xff;  // Wind better not be over 255 mph :-)
-      windDir = other >> 16 & 0xff;   // Wind direction is degrees 0-360, which is why it gets 16 bits
+      windDir = other >> 16 & 0xffff; // Wind direction is degrees 0-360, which is why it gets 16 bits
       windGusts = wind;
 
       windSpeed = knotsToMph(windSpeed);
@@ -191,7 +191,7 @@ void loop() {
     // 1234567890123456
     // 100% 200 mph WSW
     // 9% 0mph N
-    sprintf(dispBuf, "%ld%% %ld %s %s", humidity, windToShow == WIND_SPEED ? windSpeed : (windGusts > windSpeed ? windGusts : windSpeed), 
+    sprintf(dispBuf, "%ld%% %ld%s %s", humidity, windToShow == WIND_SPEED ? windSpeed : (windGusts > windSpeed ? windGusts : windSpeed), 
       windToShow == WIND_SPEED ? "mph" : "MPH", windDirectionDegreesToCompass(windDir));
     // Center the text as long as the display string is less than 16 characters.
     pad = (16 - strlen(dispBuf)) / 2;

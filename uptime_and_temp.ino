@@ -191,7 +191,7 @@ void loop() {
     // 1234567890123456
     // 100% 200 mph WSW
     // 9% 0mph N
-    sprintf(dispBuf, "%ld%% %ld%s %s", humidity, windToShow == WIND_SPEED ? windSpeed : (windGusts > windSpeed ? windGusts : windSpeed), 
+    sprintf(dispBuf, "%ld%% %ld %s %s", humidity, windToShow == WIND_SPEED ? windSpeed : (windGusts > windSpeed ? windGusts : windSpeed), 
       windToShow == WIND_SPEED ? "mph" : "MPH", windDirectionDegreesToCompass(windDir));
     // Center the text as long as the display string is less than 16 characters.
     pad = (16 - strlen(dispBuf)) / 2;
